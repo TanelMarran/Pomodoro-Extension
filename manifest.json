@@ -2,7 +2,7 @@
   "name": "Pomodoro-Extension",
   "version": "1.0",
   "description": "A chrome-extension that adds a pomodor timer that's linked with Toggl.",
-  "permissions": ["declarativeContent"],
+  "permissions": ["declarativeContent","storage"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
