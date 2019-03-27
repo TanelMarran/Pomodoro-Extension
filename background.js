@@ -1,15 +1,15 @@
 chrome.runtime.onInstalled.addListener(function() {
-    chrome.storage.sync.set({color: '#3aa757'});
-    chrome.storage.sync.set({pomodoro_desc: 'Yo dude'}, function (data) {
+    chrome.storage.sync.set({desc: 'Yo dude'}, function (data) {
         console.log("Pomdoro desc on: 'Yo dude'");
     });
-    chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
+    chrome.storage.sync.set({timer: -1});
+
+    /*chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
         chrome.declarativeContent.onPageChanged.addRules([{
             conditions: [new chrome.declarativeContent.PageStateMatcher({
-                //pageUrl: {hostEquals: 'developer.chrome.com'},
             })
             ],
             actions: [new chrome.declarativeContent.ShowPageAction()]
         }]);
-    });
+    });*/
 });
