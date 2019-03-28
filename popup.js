@@ -4,16 +4,21 @@ let i_text_pom = document.getElementById('text_pom');
 let updateButtonHTML = function (x) {
     if (x === -1) {
         b_start.innerHTML = "Start";
+        i_text_pom.disabled = false;
     } else {
         b_start.innerHTML = "Stop";
+        i_text_pom.disabled = true;
     }
 };
 
 let buttonClick = function () {
-    chrome.storage.sync.get(['timer'], function (data) {
+    chrome.runtime.getBackgroundPage(function (data) {
         let x = Math.sign(-Math.abs(Math.sign(data.timer) + 1));
-        chrome.storage.sync.set({timer: x});
-        popup.jsupdateButtonHTML(x);
+        chrome.runtime.sendMessage({
+            msg : "Timer Updated",
+            timer : x
+        });
+        updateButtonHTML(x);
         let msg_text = "Timer activated";
         if (x === -1) {
             msg_text = "Timer deactivated";
@@ -21,22 +26,19 @@ let buttonClick = function () {
         chrome.runtime.sendMessage({
             msg: msg_text
         });
-        console.log("x uuendatud " + x);
     });
 };
-
-
 
 i_text_pom.oninput = function() {
-    chrome.storage.sync.set({desc: i_text_pom.value}, function () {
-        console.log("Uus desc on: " + i_text_pom.value);
-    });
+    chrome.runtime.sendMessage({
+        msg : "Description Updated",
+        desc : i_text_pom.value
+    })
 };
 
-chrome.storage.sync.get(['timer','desc'],function (data) {
-    updateButtonHTML(data.timer);
+chrome.runtime.getBackgroundPage(function (data) {
     i_text_pom.setAttribute('value',data.desc);
-    console.log(data.desc);
+    updateButtonHTML(data.timer);
 });
 
 b_start.addEventListener('click', buttonClick);

@@ -1,40 +1,26 @@
 let interval;
 let requester = new XMLHttpRequest();
 
-chrome.runtime.onStartup.addListener(function() {
-    chrome.storage.sync.set({
-        desc: '',
-        timer: -1,
-        //APItoken : "0e6d3e786de75563787ad14c8bcdcfa2"
-    }, function () {
-        console.log("Startup");
-    });
-});
+var desc = "";
+var timer = -1;
 
 chrome.runtime.onInstalled.addListener(function() {
     chrome.storage.sync.set({
-        desc: '',
-        timer: -1,
-        APItoken : "0e6d3e786de75563787ad14c8bcdcfa2"
+        APItoken : "0e6d3e786de75563787ad14c8bcdcfa2",
+        pomo_length : 25,
+        break_length : 5,
+        break_long_length : 10
     }, function () {
-        console.log("Installed");
+        chrome.storage.sync.get(['desc','timer'], function (data) {
+            desc = data.desc;
+            timer = data.timer;
+        })
     });
 });
 
-/*let Startup = function() {
-    chrome.storage.sync.set({pipe: 'woowww'}, function () {
-        chrome.storage.sync.get(['pipe'], function (data) {
-            console.log("Fired " + data.pipe);
-        });
-    });
-};*/
-
 let countTime = function () {
-    chrome.storage.sync.get(['timer'], function (data) {
-        chrome.storage.sync.set({timer: data.timer+1}, function () {
-            console.log(data.timer+1 + " sec");
-        });
-    });
+    timer++;
+    console.log(timer);
 };
 
 let startTogglEntry = function(entryDescription) {
@@ -54,7 +40,6 @@ let startTogglEntry = function(entryDescription) {
     });
 };
 
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.msg === "Timer activated") {
         interval = setInterval(countTime,1000);
@@ -62,10 +47,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.msg === "Timer deactivated") {
         clearInterval(interval);
     }
+    if (request.msg === "Description Updated") {
+        desc = request.desc;
+    }
+    if (request.msg === "Timer Updated") {
+        timer = request.timer;
+    }
 });
-
-setInterval(function () {
-    chrome.storage.sync.get(['pipe'], function (data) {
-        console.log(data.pipe);
-    })
-},1000);
