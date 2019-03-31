@@ -2,9 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Options</title>
+    <style>
+        div {
+            overflow: hidden;
+            padding: 3px;
+        }
+        input {
+            float: left;
+            margin: 0 2px 0 0;
+        }
+        p {
+            float: left;
+            margin: 0 2px 0 0;
+            padding: 0;
+        }
+        .number {
+            width: 40px;
+        }
+    </style>
 </head>
 <body>
-
+    <div>
+        <p>API token:</p>
+        <input type="text" id="APItoken" style="width: 300px">
+    </div>
+    <div style="margin-top: 16px;">
+        <p>Focus length:</p>
+        <input type="number" class="number" id="pomo_length">
+        <p>minute(s)</p>
+    </div>
+    <div>
+        <p>Break length:</p>
+        <input type="number" class="number" id="break_length">
+        <p>minute(s)</p>
+    </div>
+    <div style="margin-top: 16px;">
+        <p>Long break length:</p>
+        <input type="number" class="number" id="break_long_length">
+        <p>minute(s)</p>
+    </div>
+    <div>
+        <p>Long break interval:</p>
+        <input type="number" class="number" id="pomo_number">
+    </div>
+<script src="options.js"></script>
 </body>
 </html>

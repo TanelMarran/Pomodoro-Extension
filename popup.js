@@ -33,7 +33,7 @@ let buttonClick = function () {
 
 let formatTime = function(time) {
     console.log(time);
-    let hours = (time-(time % 360))/360;
+    let hours = (time-(time % 3600))/3600;
     time = time-hours*360;
     let minutes = (time-(time % 60))/60;
     if (minutes < 10) {
@@ -79,3 +79,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 b_start.addEventListener('click', buttonClick);
+
+document.getElementById("options").addEventListener('click',function () {
+    chrome.runtime.openOptionsPage();
+});

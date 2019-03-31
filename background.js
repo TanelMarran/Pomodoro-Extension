@@ -16,10 +16,10 @@ chrome.runtime.onInstalled.addListener(function() {
     chrome.storage.sync.set({
         APItoken : "0e6d3e786de75563787ad14c8bcdcfa2",
         workspace_name : 'Main',
-        pomo_length : 0.25,
-        break_length : 0.1,
-        break_long_length : 0.1,
-        pomo_number : 1
+        pomo_length : 25,
+        break_length : 5,
+        break_long_length : 10,
+        pomo_number : 4
     }, function () {
         chrome.storage.sync.get(['desc','timer'], function (data) {
             desc = data.desc;
@@ -80,7 +80,7 @@ let startT = function(desc) {
 
 let countTime = function () {
     timer++;
-    if(timer === current_time_entry_length*60) {
+    if(timer >= current_time_entry_length*60) {
         chrome.runtime.sendMessage({
             msg: "Turn Off Button"
         });
