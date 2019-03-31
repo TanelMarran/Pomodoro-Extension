@@ -4,10 +4,10 @@ let i_text_pom = document.getElementById('text_pom');
 let updateButtonHTML = function (x) {
     if (x === -1) {
         b_start.innerHTML = "Start";
-        i_text_pom.disabled = false;
+        //i_text_pom.disabled = false;
     } else {
         b_start.innerHTML = "Stop";
-        i_text_pom.disabled = true;
+        //i_text_pom.disabled = true;
     }
 };
 
@@ -19,6 +19,8 @@ let buttonClick = function () {
             timer : x
         });
         updateButtonHTML(x);
+        console.log(x);
+        b_start.disabled = true;
         let msg_text = "Timer activated";
         if (x === -1) {
             msg_text = "Timer deactivated";
@@ -33,12 +35,19 @@ i_text_pom.oninput = function() {
     chrome.runtime.sendMessage({
         msg : "Description Updated",
         desc : i_text_pom.value
-    })
+    });
 };
 
 chrome.runtime.getBackgroundPage(function (data) {
     i_text_pom.setAttribute('value',data.desc);
     updateButtonHTML(data.timer);
+});
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if(request.msg === "Time Entry Started/Stopped") {
+        updateButtonHTML(request.timer);
+        b_start.disabled = false;
+    }
 });
 
 b_start.addEventListener('click', buttonClick);
