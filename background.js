@@ -16,9 +16,10 @@ chrome.runtime.onInstalled.addListener(function() {
     chrome.storage.sync.set({
         APItoken : "0e6d3e786de75563787ad14c8bcdcfa2",
         workspace_name : 'Main',
-        pomo_length : 0.5,
-        break_length : 0.05,
-        break_long_length : 0.25
+        pomo_length : 0.25,
+        break_length : 0.1,
+        break_long_length : 0.1,
+        pomo_number : 1
     }, function () {
         chrome.storage.sync.get(['desc','timer'], function (data) {
             desc = data.desc;
@@ -26,6 +27,11 @@ chrome.runtime.onInstalled.addListener(function() {
         })
     });
 });
+
+chrome.storage.sync.get(['pomo_length'], function (data) {
+    current_time_entry_length = data.pomo_length;
+});
+
 
 /**
  * Function that guarantees that the requested data was properly posted or retrieved.
@@ -59,14 +65,15 @@ let stopT = function(callback) {
     });
 };
 
-let startT = function(desc, callback) {
+let startT = function(desc) {
         startTogglEntry(desc, function (entry_id) {
             current_time_entry_id = entry_id;
             chrome.runtime.sendMessage({
                 msg : "Time Entry Started/Stopped"
             });
+            timer = 0;
             interval = setInterval(countTime,1000);
-            callback();
+            //callback();
         });
 };
 
@@ -74,13 +81,18 @@ let startT = function(desc, callback) {
 let countTime = function () {
     timer++;
     if(timer === current_time_entry_length*60) {
+        chrome.runtime.sendMessage({
+            msg: "Turn Off Button"
+        });
         stopT(function () {
-            chrome.storage.sync.get(['pomo_length','break_length','break_long_length'], function (data) {
+            chrome.storage.sync.get(['pomo_length','break_length','break_long_length',"pomo_number"], function (data) {
                 current_time_entry_index++;
                 let desc_s = "Short Break";
                 if (current_time_entry_index % 2 === 0) {
+                    //Create a Cat
+                    chrome.tabs.create({url: chrome.extension.getURL("break.html")});
                     current_time_entry_length = data.break_length;
-                    if (current_time_entry_index === 8) {
+                    if (current_time_entry_index === data.pomo_number*2) {
                         current_time_entry_length = data.break_long_length;
                         desc_s = "Long Break";
                         current_time_entry_index = 0
@@ -89,11 +101,24 @@ let countTime = function () {
                     desc_s = desc;
                     current_time_entry_length = data.pomo_length;
                 }
+                chrome.runtime.sendMessage({
+                    msg: "Turn Off Button"
+                });
                 startT(desc_s);
+                sendTickMessage(0);
             });
         });
     }
+    sendTickMessage();
     console.log(timer);
+};
+
+let sendTickMessage = function(t = timer, ctel = current_time_entry_length) {
+    chrome.runtime.sendMessage({
+        msg: "Timer Tick",
+        time: t,
+        current_time_entry_length: ctel*60
+    });
 };
 
 /**
@@ -178,7 +203,6 @@ let getTogglWorkspaceID = function(workspace_name, callback) {
     });
 };
 
-
 let startTogglEntry = function(entry_description, callback) {
     chrome.storage.sync.get(['APItoken'], function (token) {
         let requester = new XMLHttpRequest();
@@ -233,6 +257,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.msg === "Timer deactivated") {
         stopT(function () {
             current_time_entry_index = 0;
+            chrome.storage.sync.get(['pomo_length'], function (data) {
+                current_time_entry_length = data.pomo_length;
+                sendTickMessage(0);
+            });
         })
     }
     if (request.msg === "Description Updated") {

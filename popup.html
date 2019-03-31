@@ -7,17 +7,28 @@
             height: 30px;
             width: auto;
             outline: none;
-            margin: 20px;
+            margin: 2px;
         }
-        input {
+        #text_pom {
             width: 200px;
+        }
+        p {
+            margin: 5px;
+            font-size: large;
         }
     </style>
     <title>Title</title>
 </head>
 <body>
-<input id="text_pom" type="text" placeholder="With this Pomodoro I want to...">
-<button id="start">start</button>
-<script src="popup.js"></script>
+<div id="main">
+    <button id="options"><img></button>
+    <input id="text_pom" type="text" placeholder="With this Pomodoro I want to...">
+    <p id="Timer">Time left: </p>
+    <button id="start">Start</button>
+    <script src="popup.js"></script>
+</div>
+<div>
+
+</div>
 </body>
 </html>

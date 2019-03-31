@@ -31,6 +31,23 @@ let buttonClick = function () {
     });
 };
 
+let formatTime = function(time) {
+    console.log(time);
+    let hours = (time-(time % 360))/360;
+    time = time-hours*360;
+    let minutes = (time-(time % 60))/60;
+    if (minutes < 10) {
+        minutes = '0'+minutes.toString();
+    }
+    time = time-minutes*60;
+    let seconds = time;
+    if (seconds < 10) {
+        seconds = '0'+seconds.toString();
+    }
+    return (hours+":"+minutes+":"+seconds);
+};
+
+
 i_text_pom.oninput = function() {
     chrome.runtime.sendMessage({
         msg : "Description Updated",
@@ -40,6 +57,9 @@ i_text_pom.oninput = function() {
 
 chrome.runtime.getBackgroundPage(function (data) {
     i_text_pom.setAttribute('value',data.desc);
+    chrome.storage.sync.get(['pomo_length'], function (len) {
+        document.getElementById("Timer").innerHTML = "Timer: " + formatTime(len.pomo_length*60);
+    });
     updateButtonHTML(data.timer);
 });
 
@@ -47,6 +67,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if(request.msg === "Time Entry Started/Stopped") {
         updateButtonHTML(request.timer);
         b_start.disabled = false;
+    }
+    if(request.msg === "Turn Off Button") {
+        //updateButtonHTML(request.timer);
+        b_start.disabled = true;
+    }
+    if (request.msg === "Timer Tick") {
+        document.getElementById("Timer").innerHTML = "Timer: " + formatTime(request.current_time_entry_length-request.time);
+        console.log("Uuendatud");
     }
 });
 
