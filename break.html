@@ -7,9 +7,19 @@
         .center {
             margin: auto;
             width: 50%;
-            border: 3px solid green;
             padding: 10px;
             display: block;
+            text-align: center;
+        }
+        button {
+            width: auto;
+            outline: none;
+            margin-top: 5px;
+            background-color: deeppink;
+            border: deeppink;
+            color: azure;
+            border-radius: 3px;
+            cursor: pointer;
         }
 
         .button {
@@ -18,13 +28,28 @@
             cursor: pointer;
             width: 20%;
         }
+
+        img {
+            border-radius: 30px;
+        }
     </style>
 </head>
 
 <body>
 <div class="center">
+    <h1 class="center" style="color: deeppink; padding-bottom: 0; margin-bottom: 0">
+        Nice Work!
+    </h1>
+    <h1 class="center" style="padding-top: 0">
+        You've completed a Pomodoro.
+    </h1>
+    <p class="center">
+        Here are some cat pictures while you enjoy a small break.
+    </p>
+</div>
+<div class="center">
     <button type="button" class="center button" id="button">Show Cat!</button>
-    <img id="cat" class="center" src="">
+    <img id="cat" class="center" src="" alt="A cute little cat">
 </div>
 <script src="break.js"></script>
 </body>

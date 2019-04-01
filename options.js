@@ -36,12 +36,20 @@ pomo_length.oninput = function () {
 APItoken.oninput = function () {
     chrome.storage.sync.set({
         APItoken : APItoken.value
-    })
+    }, function () {
+        chrome.runtime.sendMessage({
+            msg : "API Token Updated"
+        });
+    });
 };
 
-APItoken.oninput = function () {
+workspace_name.oninput = function () {
     chrome.storage.sync.set({
         workspace_name : workspace_name.value
+    }, function () {
+        chrome.runtime.sendMessage({
+            msg : "API Token Updated"
+        });
     })
 };
 

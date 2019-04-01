@@ -1,11 +1,11 @@
 let interval;
-//let requester = new XMLHttpRequest();
 let project_id;
 let current_time_entry_index = 0;
 let current_time_entry_id;
 let current_time_entry_length;
 let project_name_conv = "Pomodoro-Extension";
 let current_time_entry_clock_desc = "Focus";
+let APIactive = false;
 
 var desc = "";
 var timer = -1;
@@ -15,8 +15,8 @@ var timer = -1;
  */
 chrome.runtime.onInstalled.addListener(function() {
     chrome.storage.sync.set({
-        APItoken : "0e6d3e786de75563787ad14c8bcdcfa2",
-        workspace_name : 'Main',
+        APItoken : "",
+        workspace_name : '',
         pomo_length : 25,
         break_length : 5,
         break_long_length : 10,
@@ -40,9 +40,12 @@ let XMLresponse = function(requester,callback) {
         if (requester.status === 200) {
             callback();
             console.log("Request succeeded. ");
-        } else {
-            callback();
         }
+    }
+    console.log("STATUS: " + requester.status);
+    if (requester.status === 403) {
+        console.log("Invalid API Token. ");
+        callback(403);
     }
 };
 
@@ -126,31 +129,34 @@ let sendTickMessage = function(t = timer, ctel = current_time_entry_length) {
  * @param callback
  */
 let getTogglProjectID = function(wordspace_id, callback) {
-    chrome.storage.sync.get(['APItoken'], function (data) {
-        let requester = new XMLHttpRequest();
-        requester.onreadystatechange = function () {
-            XMLresponse(requester,function () {
-                let response = JSON.parse(requester.responseText);
-                //console.log(response);
-                let correct_id;
-                if (response !== null) {
-                    for (const workspace of response) {
-                        const entries = Object.entries(workspace);
-                        for (const [key, value] of entries) {
-                            if (key === "name" && value === project_name_conv) {
-                                correct_id = parseInt(entries[0][1]);
+    if (APIactive === false) {
+        callback("")
+    } else {
+        chrome.storage.sync.get(['APItoken'], function (data) {
+            let requester = new XMLHttpRequest();
+            requester.onreadystatechange = function () {
+                XMLresponse(requester, function () {
+                    let response = JSON.parse(requester.responseText);
+                    let correct_id;
+                    if (response !== null) {
+                        for (const workspace of response) {
+                            const entries = Object.entries(workspace);
+                            for (const [key, value] of entries) {
+                                if (key === "name" && value === project_name_conv) {
+                                    correct_id = parseInt(entries[0][1]);
+                                }
                             }
                         }
                     }
-                }
-                callback(correct_id);
-            });
-        };
-        requester.open("get", "https://www.toggl.com/api/v8/workspaces/" + wordspace_id + "/projects", true);
-        requester.setRequestHeader("Authorization", "Basic " + btoa(data.APItoken + ":api_token"));
-        requester.setRequestHeader("Content-Type", "application/json");
-        requester.send();
-    });
+                    callback(correct_id);
+                });
+            };
+            requester.open("get", "https://www.toggl.com/api/v8/workspaces/" + wordspace_id + "/projects", true);
+            requester.setRequestHeader("Authorization", "Basic " + btoa(data.APItoken + ":api_token"));
+            requester.setRequestHeader("Content-Type", "application/json");
+            requester.send();
+        });
+    }
 };
 
 let createTogglProjectID = function(workspace_id, callback) {
@@ -184,12 +190,19 @@ let getTogglWorkspaceID = function(workspace_name, callback) {
         let requester = new XMLHttpRequest();
         requester.onreadystatechange = function () {
             XMLresponse(requester,function () {
-                let response = JSON.parse(requester.responseText);
-                for(const workspace of response) {
-                    const entries = Object.entries(workspace);
-                    for(const [key, value] of entries) {
-                        if(key === "name" && value === workspace_name) {
-                            callback(parseInt(entries[0][1]));
+                if (requester.responseText === "") {
+                    console.log("API deactivated.");
+                    APIactive = false;
+                    callback("");
+                } else {
+                    APIactive = true;
+                    let response = JSON.parse(requester.responseText);
+                    for(const workspace of response) {
+                        const entries = Object.entries(workspace);
+                        for(const [key, value] of entries) {
+                            if(key === "name" && value === workspace_name) {
+                                callback(parseInt(entries[0][1]));
+                            }
                         }
                     }
                 }
@@ -203,49 +216,57 @@ let getTogglWorkspaceID = function(workspace_name, callback) {
 };
 
 let startTogglEntry = function(entry_description, callback) {
-    chrome.storage.sync.get(['APItoken'], function (token) {
-        let requester = new XMLHttpRequest();
-        requester.onreadystatechange = function() {
-            XMLresponse(requester, function () {
-                let response = JSON.parse(requester.responseText);
-                callback(response.data.id);
-            });
-        };
+    if (APIactive === false) {
+        callback("");
+    } else {
+        chrome.storage.sync.get(['APItoken'], function (token) {
+            let requester = new XMLHttpRequest();
+            requester.onreadystatechange = function () {
+                XMLresponse(requester, function () {
+                    let response = JSON.parse(requester.responseText);
+                    callback(response.data.id);
+                });
+            };
 
-        let data = {
-            "time_entry": {
-                "description":entry_description,
-                "pid":project_id,
-                "created_with":"Pomodoro-Extension"
-            }
-        };
-        requester.open("post","https://www.toggl.com/api/v8/time_entries/start");
-        requester.setRequestHeader("Authorization", "Basic " + btoa(token.APItoken + ":api_token"));
-        requester.setRequestHeader("Content-Type","application/json");
-        requester.send(JSON.stringify(data));
-    });
+            let data = {
+                "time_entry": {
+                    "description": entry_description,
+                    "pid": project_id,
+                    "created_with": "Pomodoro-Extension"
+                }
+            };
+            requester.open("post", "https://www.toggl.com/api/v8/time_entries/start");
+            requester.setRequestHeader("Authorization", "Basic " + btoa(token.APItoken + ":api_token"));
+            requester.setRequestHeader("Content-Type", "application/json");
+            requester.send(JSON.stringify(data));
+        });
+    }
 };
 
 let stopTogglEntry = function(time_entry_id, callback) {
-    chrome.storage.sync.get(['APItoken'], function (token) {
-        let requester = new XMLHttpRequest();
-        requester.onreadystatechange = function() {
-            XMLresponse(requester, function () {
-                callback(-4);
-            });
-        };
+    if (APIactive === false) {
+        callback("")
+    } else {
+        chrome.storage.sync.get(['APItoken'], function (token) {
+            let requester = new XMLHttpRequest();
+            requester.onreadystatechange = function () {
+                XMLresponse(requester, function () {
+                    callback(-4);
+                });
+            };
 
-        requester.open("put","https://www.toggl.com/api/v8/time_entries/"+time_entry_id+"/stop");
-        requester.setRequestHeader("Authorization", "Basic " + btoa(token.APItoken + ":api_token"));
-        requester.setRequestHeader("Content-Type","application/json");
-        requester.send();
-    });
+            requester.open("put", "https://www.toggl.com/api/v8/time_entries/" + time_entry_id + "/stop");
+            requester.setRequestHeader("Authorization", "Basic " + btoa(token.APItoken + ":api_token"));
+            requester.setRequestHeader("Content-Type", "application/json");
+            requester.send();
+        });
+    }
 };
 
 /**
  * Message listener
  */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request) {
     if (request.msg === "Timer activated") {
         chrome.storage.sync.get(['pomo_length'], function (data) {
             current_time_entry_length = data.pomo_length;
@@ -270,18 +291,28 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.msg === "Timer Updated") {
         timer = request.timer;
     }
+    if (request.msg === "API Token Updated") {
+        setProjectID();
+        console.log("API Token Updated")
+    }
 });
 
-chrome.storage.sync.get(['workspace_name'], function (name) {
-    getTogglWorkspaceID(name.workspace_name,function (workspace_id) {
-        getTogglProjectID(workspace_id,function (pid) {
-            if(pid === undefined) {
-                createTogglProjectID(workspace_id,function (pid) {
+let setProjectID = function() {
+    chrome.storage.sync.get(['workspace_name'], function (name) {
+        getTogglWorkspaceID(name.workspace_name, function (workspace_id) {
+            getTogglProjectID(workspace_id, function (pid) {
+                if (pid === undefined) {
+                    createTogglProjectID(workspace_id, function (pid) {
+                        project_id = pid;
+                    })
+                } else {
                     project_id = pid;
-                })
-            } else {
-                project_id = pid;
-            }
+                }
+                console.log("Use API? " + APIactive);
+            });
         });
     });
-});
+};
+
+setProjectID();
+

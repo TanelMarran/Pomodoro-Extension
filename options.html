@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <title>Options</title>
     <style>
+        body {
+            color: #4f464a;
+            font-size: medium;
+        }
         div {
             overflow: hidden;
             padding: 3px;
         }
         input {
             float: left;
+            width: 30px;
             margin: 0 2px 0 0;
         }
         p {
@@ -25,11 +30,11 @@
 <body>
     <div>
         <p>API token:</p>
-        <input type="text" id="APItoken" style="width: 300px">
+        <input type="text" id="APItoken" style="width: 253px" placeholder="leave empty for no Toggl integration">
     </div>
     <div>
         <p>Workspace name:</p>
-        <input type="text" id="workspace_name" style="width: 300px">
+        <input type="text" id="workspace_name" style="width: 200px" placeholder="where to save time entries">
     </div>
     <div style="margin-top: 16px;">
         <p>Focus length:</p>
@@ -42,12 +47,12 @@
         <p>minute(s)</p>
     </div>
     <div style="margin-top: 16px;">
-        <p>Long break length:</p>
+        <p style="padding-right: 7px">Long break length:</p>
         <input type="number" class="number" id="break_long_length">
         <p>minute(s)</p>
     </div>
     <div>
-        <p>Long break interval:</p>
+        <p>Long break interval: </p>
         <input type="number" class="number" id="pomo_number">
     </div>
 <script src="options.js"></script>
