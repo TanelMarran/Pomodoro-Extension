@@ -3,14 +3,16 @@ let pomo_length = document.getElementById("pomo_length");
 let break_length = document.getElementById("break_length");
 let break_long_length = document.getElementById("break_long_length");
 let APItoken = document.getElementById("APItoken");
+let workspace_name = document.getElementById("workspace_name");
 let options = [APItoken,pomo_length,break_length,break_long_length,pomo_number];
 
-chrome.storage.sync.get(['pomo_number',"pomo_length","break_length","break_long_length","APItoken"], function (data) {
+chrome.storage.sync.get(['pomo_number',"pomo_length","break_length","break_long_length","APItoken","workspace_name"], function (data) {
     pomo_number.value = data.pomo_number;
     pomo_length.value = data.pomo_length;
     break_length.value = data.break_length;
     break_long_length.value = data.break_long_length;
     APItoken.value = data.APItoken;
+    workspace_name.value = data.workspace_name;
 });
 
 break_length.oninput = function () {
@@ -37,7 +39,13 @@ APItoken.oninput = function () {
     })
 };
 
-break_long_length.onChange = function () {
+APItoken.oninput = function () {
+    chrome.storage.sync.set({
+        workspace_name : workspace_name.value
+    })
+};
+
+break_long_length.oninput = function () {
     chrome.storage.sync.set({
         break_long_length : break_long_length.value
     })

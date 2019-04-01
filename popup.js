@@ -58,7 +58,7 @@ i_text_pom.oninput = function() {
 chrome.runtime.getBackgroundPage(function (data) {
     i_text_pom.setAttribute('value',data.desc);
     chrome.storage.sync.get(['pomo_length'], function (len) {
-        document.getElementById("Timer").innerHTML = "Timer: " + formatTime(len.pomo_length*60);
+        document.getElementById("Timer").innerHTML = "Focus: " + formatTime(len.pomo_length*60);
     });
     updateButtonHTML(data.timer);
 });
@@ -69,11 +69,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         b_start.disabled = false;
     }
     if(request.msg === "Turn Off Button") {
-        //updateButtonHTML(request.timer);
         b_start.disabled = true;
     }
     if (request.msg === "Timer Tick") {
-        document.getElementById("Timer").innerHTML = "Timer: " + formatTime(request.current_time_entry_length-request.time);
+        document.getElementById("Timer").innerHTML = request.ctecd + ": " + formatTime(request.current_time_entry_length-request.time);
         console.log("Uuendatud");
     }
 });

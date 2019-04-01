@@ -5,6 +5,7 @@ let current_time_entry_index = 0;
 let current_time_entry_id;
 let current_time_entry_length;
 let project_name_conv = "Pomodoro-Extension";
+let current_time_entry_clock_desc = "Focus";
 
 var desc = "";
 var timer = -1;
@@ -20,11 +21,6 @@ chrome.runtime.onInstalled.addListener(function() {
         break_length : 5,
         break_long_length : 10,
         pomo_number : 4
-    }, function () {
-        chrome.storage.sync.get(['desc','timer'], function (data) {
-            desc = data.desc;
-            timer = data.timer;
-        })
     });
 });
 
@@ -44,10 +40,8 @@ let XMLresponse = function(requester,callback) {
         if (requester.status === 200) {
             callback();
             console.log("Request succeeded. ");
-        }
-
-        if (requester.status === 404) {
-            console.log("File or resource not found.")
+        } else {
+            callback();
         }
     }
 };
@@ -88,6 +82,7 @@ let countTime = function () {
             chrome.storage.sync.get(['pomo_length','break_length','break_long_length',"pomo_number"], function (data) {
                 current_time_entry_index++;
                 let desc_s = "Short Break";
+                current_time_entry_clock_desc = "Short Break";
                 if (current_time_entry_index % 2 === 0) {
                     //Create a Cat
                     chrome.tabs.create({url: chrome.extension.getURL("break.html")});
@@ -95,15 +90,18 @@ let countTime = function () {
                     if (current_time_entry_index === data.pomo_number*2) {
                         current_time_entry_length = data.break_long_length;
                         desc_s = "Long Break";
+                        current_time_entry_clock_desc = "Long Break";
                         current_time_entry_index = 0
                     }
                 } else {
                     desc_s = desc;
+                    current_time_entry_clock_desc = "Focus";
                     current_time_entry_length = data.pomo_length;
                 }
                 chrome.runtime.sendMessage({
                     msg: "Turn Off Button"
                 });
+                console.log(current_time_entry_clock_desc);
                 startT(desc_s);
                 sendTickMessage(0);
             });
@@ -117,7 +115,8 @@ let sendTickMessage = function(t = timer, ctel = current_time_entry_length) {
     chrome.runtime.sendMessage({
         msg: "Timer Tick",
         time: t,
-        current_time_entry_length: ctel*60
+        current_time_entry_length: ctel*60,
+        ctecd: current_time_entry_clock_desc
     });
 };
 
@@ -250,6 +249,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.msg === "Timer activated") {
         chrome.storage.sync.get(['pomo_length'], function (data) {
             current_time_entry_length = data.pomo_length;
+            current_time_entry_clock_desc = "Focus";
             current_time_entry_index++;
             startT(desc);
         });
@@ -259,6 +259,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             current_time_entry_index = 0;
             chrome.storage.sync.get(['pomo_length'], function (data) {
                 current_time_entry_length = data.pomo_length;
+                current_time_entry_clock_desc = "Focus";
                 sendTickMessage(0);
             });
         })
