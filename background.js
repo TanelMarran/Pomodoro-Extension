@@ -49,6 +49,10 @@ let XMLresponse = function(requester,callback) {
     }
 };
 
+/**
+ * Function that stops the current time entry.
+ * @param callback
+ */
 let stopT = function(callback) {
     stopTogglEntry(current_time_entry_id, function () {
         current_time_entry_id = -4;
@@ -62,6 +66,10 @@ let stopT = function(callback) {
     });
 };
 
+/**
+ * Function that starts a new time entry.
+ * @param desc The description of the time entry (as defined by the user).
+ */
 let startT = function(desc) {
         startTogglEntry(desc, function (entry_id) {
             current_time_entry_id = entry_id;
@@ -75,6 +83,10 @@ let startT = function(desc) {
 };
 
 
+/**
+ * Function that counts, how long the current time entry has been running.
+ * It also handles switching between focus time, breaks and long breaks.
+ */
 let countTime = function () {
     timer++;
     if(timer >= current_time_entry_length*60) {
@@ -114,6 +126,11 @@ let countTime = function () {
     console.log(timer);
 };
 
+/**
+ * Sends a message to the popup.html page so that it can update the timer visuals.
+ * @param t
+ * @param ctel
+ */
 let sendTickMessage = function(t = timer, ctel = current_time_entry_length) {
     chrome.runtime.sendMessage({
         msg: "Timer Tick",
@@ -159,6 +176,11 @@ let getTogglProjectID = function(wordspace_id, callback) {
     }
 };
 
+/**
+ * Creates a new toggle project in the assigned workspace.
+ * @param workspace_id
+ * @param callback
+ */
 let createTogglProjectID = function(workspace_id, callback) {
     chrome.storage.sync.get(['APItoken'], function (token) {
         let requester = new XMLHttpRequest();
@@ -185,6 +207,11 @@ let createTogglProjectID = function(workspace_id, callback) {
     });
 };
 
+/**
+ * Gets the id of the toggle workspace by name
+ * @param workspace_name
+ * @param callback
+ */
 let getTogglWorkspaceID = function(workspace_name, callback) {
     chrome.storage.sync.get(['APItoken'], function (data) {
         let requester = new XMLHttpRequest();
@@ -215,6 +242,11 @@ let getTogglWorkspaceID = function(workspace_name, callback) {
     });
 };
 
+/**
+ * starts a new time entry in Toggl
+ * @param entry_description
+ * @param callback
+ */
 let startTogglEntry = function(entry_description, callback) {
     if (APIactive === false) {
         callback("");
@@ -243,6 +275,11 @@ let startTogglEntry = function(entry_description, callback) {
     }
 };
 
+/**
+ * Stops the Toggl time entry in with the given ID
+ * @param time_entry_id
+ * @param callback
+ */
 let stopTogglEntry = function(time_entry_id, callback) {
     if (APIactive === false) {
         callback("")
@@ -267,7 +304,7 @@ let stopTogglEntry = function(time_entry_id, callback) {
  * Message listener
  */
 chrome.runtime.onMessage.addListener(function (request) {
-    if (request.msg === "Timer activated") {
+    if (request.msg === "Timer activated") { //Message that notifies the background page that the user has clicked the button to start a new pomodoro cycle.
         chrome.storage.sync.get(['pomo_length'], function (data) {
             current_time_entry_length = data.pomo_length;
             current_time_entry_clock_desc = "Focus";
@@ -275,7 +312,7 @@ chrome.runtime.onMessage.addListener(function (request) {
             startT(desc);
         });
     }
-    if (request.msg === "Timer deactivated") {
+    if (request.msg === "Timer deactivated") { //Message that notifies the background page that the user has clicked the button to end the current pomodoro cycle.
         stopT(function () {
             current_time_entry_index = 0;
             chrome.storage.sync.get(['pomo_length'], function (data) {
@@ -285,18 +322,21 @@ chrome.runtime.onMessage.addListener(function (request) {
             });
         })
     }
-    if (request.msg === "Description Updated") {
+    if (request.msg === "Description Updated") { //The user has changed the description of the next time entry
         desc = request.desc;
     }
-    if (request.msg === "Timer Updated") {
+    if (request.msg === "Timer Updated") { //Resets the timer if the user has started/stopped timing
         timer = request.timer;
     }
-    if (request.msg === "API Token Updated") {
+    if (request.msg === "API Token Updated") { //The user has changed the API token used for Toggl integration
         setProjectID();
         console.log("API Token Updated")
     }
 });
 
+/**
+ * Function that sets up the current Toggl account with the proper workspace and project where the time entries will be saved.
+ */
 let setProjectID = function() {
     chrome.storage.sync.get(['workspace_name'], function (name) {
         getTogglWorkspaceID(name.workspace_name, function (workspace_id) {
