@@ -1,13 +1,16 @@
 let b_start = document.getElementById('start');
 let i_text_pom = document.getElementById('text_pom');
 
+/**
+ * Update the button's text depending on the variable x, which represents a timer
+ * (-1 means that time isn't being counted and anything greater than that means that time is being counted)
+ * @param x The variable that represents a timer.
+ */
 let updateButtonHTML = function (x) {
     if (x === -1) {
         b_start.innerHTML = "Start";
-        //i_text_pom.disabled = false;
     } else {
         b_start.innerHTML = "Stop";
-        //i_text_pom.disabled = true;
     }
 };
 
@@ -31,6 +34,11 @@ let buttonClick = function () {
     });
 };
 
+/**
+ * Formats seconds into a string with the format hh:mm:ss
+ * @param time in seconds.
+ * @returns Time formatted as hh:mm:s
+ */
 let formatTime = function(time) {
     console.log(time);
     let hours = (time-(time % 3600))/3600;
@@ -47,7 +55,9 @@ let formatTime = function(time) {
     return (hours+":"+minutes+":"+seconds);
 };
 
-
+/**
+ * Sends a message to the backgrounds script, informing it that the description of the next time entry has been updated.
+ */
 i_text_pom.oninput = function() {
     chrome.runtime.sendMessage({
         msg : "Description Updated",
@@ -55,6 +65,9 @@ i_text_pom.oninput = function() {
     });
 };
 
+/**
+ * When the popup is opened, change the text and clock to reflect what is actually being measured in the backgroud script.
+ */
 chrome.runtime.getBackgroundPage(function (data) {
     i_text_pom.setAttribute('value',data.desc);
     chrome.storage.sync.get(['pomo_length'], function (len) {
@@ -63,7 +76,7 @@ chrome.runtime.getBackgroundPage(function (data) {
     updateButtonHTML(data.timer);
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request) {
     if(request.msg === "Time Entry Started/Stopped") {
         updateButtonHTML(request.timer);
         b_start.disabled = false;
@@ -71,7 +84,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if(request.msg === "Turn Off Button") {
         b_start.disabled = true;
     }
-    if (request.msg === "Timer Tick") {
+    if (request.msg === "Timer Tick") { //Updates the HTML of the popup to reflect how the counter ticks down.
         document.getElementById("Timer").innerHTML = request.ctecd + ": " + formatTime(request.current_time_entry_length-request.time);
         console.log("Uuendatud");
     }
