@@ -11,7 +11,7 @@ var desc = "";
 var timer = -1;
 
 /**
- * Initialize some storage variables.
+ * Initialize some storage variables. These define user preferences.
  */
 chrome.runtime.onInstalled.addListener(function() {
     chrome.storage.sync.set({
@@ -37,7 +37,7 @@ chrome.storage.sync.get(['pomo_length'], function (data) {
  */
 let XMLresponse = function(requester,callback) {
     if (requester.readyState === 4) {
-        if (requester.status === 200) {
+        if (requester.status === 200) { //The request succeeded.
             callback();
             console.log("Request succeeded. ");
         }
@@ -55,13 +55,13 @@ let XMLresponse = function(requester,callback) {
  */
 let stopT = function(callback) {
     stopTogglEntry(current_time_entry_id, function () {
-        current_time_entry_id = -4;
-        timer = -1;
+        current_time_entry_id = -4; //-4 means that there is no active time entry.
+        timer = -1; //-1 means that the timer is currently not active.
         chrome.runtime.sendMessage({
             msg : "Time Entry Started/Stopped",
             timer : timer
         });
-        clearInterval(interval);
+        clearInterval(interval); //Stops the counting of time.
         callback();
     });
 };
@@ -71,15 +71,15 @@ let stopT = function(callback) {
  * @param desc The description of the time entry (as defined by the user).
  */
 let startT = function(desc) {
-        startTogglEntry(desc, function (entry_id) {
-            current_time_entry_id = entry_id;
-            chrome.runtime.sendMessage({
-                msg : "Time Entry Started/Stopped"
-            });
-            timer = 0;
-            interval = setInterval(countTime,1000);
-            //callback();
+    startTogglEntry(desc, function (entry_id) {
+        current_time_entry_id = entry_id; //Saves the id of the toggl time entry returned by the callback.
+        chrome.runtime.sendMessage({
+            msg : "Time Entry Started/Stopped"
         });
+        timer = 0; //0 means that the extension has started counting time
+        interval = setInterval(countTime,1000);
+        callback();
+    });
 };
 
 
@@ -88,25 +88,24 @@ let startT = function(desc) {
  * It also handles switching between focus time, breaks and long breaks.
  */
 let countTime = function () {
-    timer++;
-    if(timer >= current_time_entry_length*60) {
-        chrome.runtime.sendMessage({
+    timer++; //Increment time
+    if(timer >= current_time_entry_length*60) { //If the use has finished a break/focus interval then start switching to the next time segment
+        chrome.runtime.sendMessage({ //The "Turn Off Button" message ensures that the user can't send a new http request when one is already being send and worked with.
             msg: "Turn Off Button"
         });
         stopT(function () {
             chrome.storage.sync.get(['pomo_length','break_length','break_long_length',"pomo_number"], function (data) {
-                current_time_entry_index++;
-                let desc_s = "Short Break";
-                current_time_entry_clock_desc = "Short Break";
-                if (current_time_entry_index % 2 === 0) {
-                    //Create a Cat
-                    chrome.tabs.create({url: chrome.extension.getURL("break.html")});
+                current_time_entry_index++; //This variable saves how many intervals the user has completed. Used in activating focus time or a short/long break.
+                let desc_s = "Short Break"; //What should be the title of the toggl entry.
+                current_time_entry_clock_desc = "Short Break"; //What text should the popup clock display.
+                if (current_time_entry_index % 2 === 0) { //Checks if we should start a break or not.
+                    chrome.tabs.create({url: chrome.extension.getURL("break.html")}); //Open a new window for cat viewing.
                     current_time_entry_length = data.break_length;
-                    if (current_time_entry_index === data.pomo_number*2) {
+                    if (current_time_entry_index === data.pomo_number*2) { //Further defines whether the break should be a long or short one.
                         current_time_entry_length = data.break_long_length;
                         desc_s = "Long Break";
                         current_time_entry_clock_desc = "Long Break";
-                        current_time_entry_index = 0
+                        current_time_entry_index = 0 //Reset the time entry index, so that the next long break starts after the expected amount of short breaks.
                     }
                 } else {
                     desc_s = desc;
@@ -117,7 +116,7 @@ let countTime = function () {
                     msg: "Turn Off Button"
                 });
                 console.log(current_time_entry_clock_desc);
-                startT(desc_s);
+                startT(desc_s); //Start the time entry with the given description/title.
                 sendTickMessage(0);
             });
         });
@@ -135,8 +134,8 @@ let sendTickMessage = function(t = timer, ctel = current_time_entry_length) {
     chrome.runtime.sendMessage({
         msg: "Timer Tick",
         time: t,
-        current_time_entry_length: ctel*60,
-        ctecd: current_time_entry_clock_desc
+        current_time_entry_length: ctel*60, //Updates from where the clock should start counting down.
+        ctecd: current_time_entry_clock_desc //Updates the clock text.
     });
 };
 
@@ -156,7 +155,7 @@ let getTogglProjectID = function(wordspace_id, callback) {
                     let response = JSON.parse(requester.responseText);
                     let correct_id;
                     if (response !== null) {
-                        for (const workspace of response) {
+                        for (const workspace of response) { //Iterate through the response and find if there exists a project with the proper naming convemtion
                             const entries = Object.entries(workspace);
                             for (const [key, value] of entries) {
                                 if (key === "name" && value === project_name_conv) {
@@ -188,7 +187,6 @@ let createTogglProjectID = function(workspace_id, callback) {
         requester.onreadystatechange = function() {
             XMLresponse(requester, function () {
                 let response = JSON.parse(requester.responseText);
-                //console.log(JSON.stringify(response));
                 callback(response.data.id);
             });
         };
@@ -217,7 +215,7 @@ let getTogglWorkspaceID = function(workspace_name, callback) {
         let requester = new XMLHttpRequest();
         requester.onreadystatechange = function () {
             XMLresponse(requester,function () {
-                if (requester.responseText === "") {
+                if (requester.responseText === "") { //If the responseText is empty, then dont use Toggl integration
                     console.log("API deactivated.");
                     APIactive = false;
                     callback("");
@@ -248,7 +246,7 @@ let getTogglWorkspaceID = function(workspace_name, callback) {
  * @param callback
  */
 let startTogglEntry = function(entry_description, callback) {
-    if (APIactive === false) {
+    if (APIactive === false) { //If the user isnt using Toggl integration, then return an empty string with the callback.
         callback("");
     } else {
         chrome.storage.sync.get(['APItoken'], function (token) {
@@ -281,7 +279,7 @@ let startTogglEntry = function(entry_description, callback) {
  * @param callback
  */
 let stopTogglEntry = function(time_entry_id, callback) {
-    if (APIactive === false) {
+    if (APIactive === false) { //If the user isnt using Toggl integration, then return an empty string with the callback.
         callback("")
     } else {
         chrome.storage.sync.get(['APItoken'], function (token) {
